@@ -4,8 +4,6 @@ SQLAlchemy
 requests
 python-dotenv
 pytz
-gunicornpyt
-Flask
 gunicorn
 SQLAlchemy
 psycopg2-binary
