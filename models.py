@@ -1,5 +1,4 @@
-# models.py
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy 
 from datetime import datetime
 
 db = SQLAlchemy()
@@ -18,12 +17,20 @@ class User(db.Model):
     account_age = db.Column(db.Integer)
     karma = db.Column(db.Integer)
     joined = db.Column(db.DateTime, default=datetime.utcnow)
-    blocked = db.Column(db.Boolean, default=False)  # Add this field
+    blocked = db.Column(db.Boolean, default=False)
     is_banned = db.Column(db.Boolean, default=False)
+
+    def __repr__(self):
+        return f'<User {self.reddit_username}>'
 
 class Vibe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    sender = db.Column(db.String(100))
-    receiver = db.Column(db.String(100))
-    status = db.Column(db.String(20))  # pending, accepted, denied
+    sender = db.Column(db.String(100), nullable=False)
+    receiver = db.Column(db.String(100), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending, accepted, denied
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    
+
+    def __repr__(self):
+        return f'<Vibe {self.sender} -> {self.receiver}: {self.status}>'
+    
