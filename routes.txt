@@ -1,0 +1,26 @@
+📌 List of Routes
+🌐 Public Routes
+/ — index
+
+/login — login
+
+/callback — callback
+
+👤 User Routes
+/setup — setup_profile
+
+/match — match
+
+/send_vibe/<username> — send_vibe (POST)
+
+/dashboard — dashboard
+
+/unmatch/<username> — unmatch (POST)
+
+🛠️ Admin Routes
+/admin — admin_panel
+
+🔄 Vibe Response Routes
+/pending_vibes — pending_vibes
+
+/respond_vibe/<int:vibe_id>/<string:response> — respond_vibe (POST)

@@ -1,0 +1,279 @@
+from flask import Flask, redirect, request, session, render_template, url_for, abort, flash
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+import requests
+import os
+
+app = Flask(__name__)
+app.secret_key = 'your_secret_key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///vibe_match.db'
+db = SQLAlchemy(app)
+
+# Reddit OAuth config
+CLIENT_ID = 'ZohBbgx_RtMA4OLWTrKYTQ'
+CLIENT_SECRET = 'rUvR1cw5mh13MFo9iKu6_LdT6iKpgQ'
+REDIRECT_URI = 'https://2bks01x5-5000.inc1.devtunnels.ms/callback'
+USER_AGENT = 'VibeMatchApp/0.1'
+
+### DATABASE MODELS ###
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    reddit_username = db.Column(db.String, unique=True)
+    karma = db.Column(db.Integer)
+    account_created_at = db.Column(db.DateTime)  # store actual Reddit account creation date
+    nickname = db.Column(db.String)
+    age = db.Column(db.Integer)
+    min_age = db.Column(db.Integer)
+    max_age = db.Column(db.Integer)
+    interests = db.Column(db.Text)  # JSON string or comma-separated interests
+    looking_for = db.Column(db.Text)
+    bio = db.Column(db.Text)
+
+    @property
+    def account_age(self):
+        if self.account_created_at:
+            return (datetime.utcnow() - self.account_created_at).days
+        return None
+
+class Vibe(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender = db.Column(db.String)
+    receiver = db.Column(db.String)
+    status = db.Column(db.String)  # pending / accepted / unmatched
+
+class Report(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String)
+    reason = db.Column(db.String)
+
+### ROUTES ###
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/login')
+def login():
+    return redirect(
+        f"https://www.reddit.com/api/v1/authorize?client_id={CLIENT_ID}&response_type=code&state=random123&redirect_uri={REDIRECT_URI}&duration=temporary&scope=identity"
+    )
+
+@app.route('/callback')
+def callback():
+    code = request.args.get('code')
+    auth = requests.auth.HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET)
+    data = {'grant_type': 'authorization_code', 'code': code, 'redirect_uri': REDIRECT_URI}
+    headers = {'User-Agent': USER_AGENT}
+
+    res = requests.post('https://www.reddit.com/api/v1/access_token', auth=auth, data=data, headers=headers)
+    token = res.json().get('access_token')
+
+    if not token:
+        return "Failed to authenticate with Reddit", 400
+
+    headers['Authorization'] = f'bearer {token}'
+    user_res = requests.get('https://oauth.reddit.com/api/v1/me', headers=headers).json()
+
+    username = user_res.get('name')
+    karma = user_res.get('total_karma')
+    created = user_res.get('created_utc')
+
+    session['username'] = username
+
+    user = User.query.filter_by(reddit_username=username).first()
+    if not user:
+        user = User(
+            reddit_username=username,
+            karma=karma,
+            account_created_at=datetime.utcfromtimestamp(created)
+        )
+        db.session.add(user)
+        db.session.commit()
+
+    return redirect(url_for('setup_profile'))
+
+@app.route('/setup', methods=['GET', 'POST'])
+def setup_profile():
+    user = User.query.filter_by(reddit_username=session.get('username')).first()
+    if not user:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        user.nickname = request.form.get('nickname')
+        user.age = int(request.form.get('age'))
+        user.min_age = int(request.form.get('min_age'))
+        user.max_age = int(request.form.get('max_age'))
+        user.interests = ','.join(request.form.getlist('interests'))
+        user.looking_for = request.form.get('looking_for')
+        user.bio = request.form.get('bio')
+        db.session.commit()
+        return redirect(url_for('match'))
+
+    return render_template('setup_profile.html')
+
+@app.route('/match')
+def match():
+    user = User.query.filter_by(reddit_username=session.get('username')).first()
+    if not user:
+        return redirect(url_for('login'))
+
+    all_users = User.query.filter(User.reddit_username != user.reddit_username).all()
+
+    matches = []
+    user_interests = set(user.interests.split(',')) if user.interests else set()
+
+    for other in all_users:
+        if not other.age or other.age < user.min_age or other.age > user.max_age:
+            continue
+
+        other_interests = set(other.interests.split(',')) if other.interests else set()
+        shared = user_interests & other_interests
+        score = len(shared) * 10
+
+        matches.append({
+            'username': other.reddit_username,
+            'nickname': other.nickname or other.reddit_username,
+            'shared_interests': list(shared),
+            'score': score
+        })
+
+    matches = sorted(matches, key=lambda x: -x['score'])[:10]
+    return render_template('match.html', matches=matches)
+
+@app.route('/send_vibe/<username>', methods=['POST'])
+def send_vibe(username):
+    sender = session.get('username')
+    if not sender:
+        return redirect(url_for('login'))
+
+    vibe = Vibe(sender=sender, receiver=username, status='pending')
+    db.session.add(vibe)
+    db.session.commit()
+    return redirect(url_for('dashboard'))
+
+@app.route('/dashboard')
+def dashboard():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    user = User.query.filter_by(reddit_username=session['username']).first()
+
+    # Fetch vibe interactions
+    sent_vibes = Vibe.query.filter_by(sender=user.reddit_username).all()
+    received_vibes = Vibe.query.filter_by(receiver=user.reddit_username).all()
+    accepted_sent = Vibe.query.filter_by(sender=user.reddit_username, status='accepted').all()
+    accepted_received = Vibe.query.filter_by(receiver=user.reddit_username, status='accepted').all()
+    pending_vibes = Vibe.query.filter_by(sender=user.reddit_username, status='pending').all()
+
+    # Current matches (bidirectional accepted)
+    current_matches = []
+    for vibe in accepted_sent:
+        match_user = User.query.filter_by(reddit_username=vibe.receiver).first()
+        shared = set(user.interests.split(',')) & set(match_user.interests.split(','))
+        current_matches.append({
+            'username': match_user.reddit_username,
+            'nickname': match_user.nickname or match_user.reddit_username,
+            'score': len(shared) * 10
+        })
+
+    # Suggested matches (not yet matched or vibed)
+    all_users = User.query.filter(User.reddit_username != user.reddit_username).all()
+    sent_usernames = [v.receiver for v in sent_vibes]
+    suggested_matches = []
+    for other in all_users:
+        if other.reddit_username in sent_usernames:
+            continue
+        if other.age < user.min_age or other.age > user.max_age:
+            continue
+        shared = set(user.interests.split(',')) & set(other.interests.split(','))
+        score = len(shared) * 10
+        suggested_matches.append({
+            'username': other.reddit_username,
+            'nickname': other.nickname or other.reddit_username,
+            'score': score,
+            'shared_interests': list(shared)
+        })
+    suggested_matches = sorted(suggested_matches, key=lambda x: -x['score'])[:5]
+
+    stats = {
+    'total_vibes': len(sent_vibes) + len(received_vibes),
+    'pending_vibes': len(pending_vibes),
+    'matches': len(current_matches),
+    'sent_vibes': len(sent_vibes),
+    'received_vibes': len(received_vibes)
+}
+
+
+    return render_template('dashboard.html',
+                           user=user,
+                           matches=current_matches,
+                           pending_vibes=[v.receiver for v in pending_vibes],
+                           suggested_matches=suggested_matches,
+                           total_sent=total_sent,
+                           total_received=total_received,
+                           total_matches=total_matches)
+
+
+@app.route('/unmatch/<username>', methods=['POST'])
+def unmatch(username):
+    user = session.get('username')
+    if not user:
+        return redirect(url_for('login'))
+
+    Vibe.query.filter_by(sender=user, receiver=username).delete()
+    Vibe.query.filter_by(sender=username, receiver=user).delete()
+    db.session.commit()
+    return redirect(url_for('dashboard'))
+
+@app.route('/admin')
+def admin_panel():
+    if 'username' not in session or session['username'] != 'Ok-Yard439':
+        return "Unauthorized", 403
+
+    reports = Report.query.all()
+
+    users = User.query.all()
+    user_data = []
+    for user in users:
+        user_data.append({
+            'username': user.reddit_username,
+            'karma': user.karma,
+            'account_age': user.account_age,
+            'bio': user.bio or '',
+            'interests': user.interests.split(',') if user.interests else []
+        })
+
+    top_interests = get_top_interests()
+    match_rate = calculate_match_rate()
+    total_matches = Vibe.query.count()
+
+    return render_template('admin_panel.html',
+                           reported_users=reports,
+                           users=user_data,
+                           top_interests=top_interests,
+                           match_rate=match_rate,
+                           total_matches=total_matches)
+
+### HELPER FUNCTIONS ###
+def get_top_interests():
+    all_interests = []
+    for user in User.query.all():
+        if user.interests:
+            all_interests += user.interests.split(',')
+    freq = {}
+    for interest in all_interests:
+        freq[interest] = freq.get(interest, 0) + 1
+    sorted_interests = sorted(freq.items(), key=lambda x: -x[1])
+    return [i[0] for i in sorted_interests[:5]]
+
+def calculate_match_rate():
+    total = Vibe.query.count()
+    accepted = Vibe.query.filter_by(status='accepted').count()
+    return round((accepted / total) * 100, 2) if total > 0 else 0
+
+if __name__ == '__main__':
+    if not os.path.exists('vibe_match.db'):
+        with app.app_context():
+            db.create_all()
+    app.run(debug=True)
+
