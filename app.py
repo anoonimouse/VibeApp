@@ -7,7 +7,8 @@
 # - Fixed admin ban route redirect
 # - Verified app context and db instance integrity
 
-# File: models.py
+# File: models.
+import os
 from flask import flash
 from flask_sqlalchemy import SQLAlchemy 
 from sqlalchemy import Boolean, Column, Integer
@@ -56,7 +57,7 @@ import os
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///vibematch.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://vibeapp_user:ScPXEpjVHuKTprIrEflmHkCTTKKY9H9n@dpg-d13jaua4d50c739gno30-a/vibeapp'
 db.init_app(app)
 
 # Reddit OAuth config
