@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Step 4a - Music Interests</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-purple-800 to-indigo-900 text-white min-h-screen flex items-center justify-center px-4">
+  <div class="max-w-lg w-full bg-white bg-opacity-10 p-8 rounded-lg border border-pink-400 shadow-lg">
+    <h2 class="text-3xl font-extrabold text-pink-300 text-center mb-6">Step 4a: Your Music Interests</h2>
+    <form method="POST" class="space-y-6">
+      <div class="grid grid-cols-2 gap-4">
+        {% for music in music_options %}
+        <label class="inline-flex items-center space-x-2 text-pink-300">
+          <input type="checkbox" name="music_interests" value="{{ music }}" {% if music in saved_interests %}checked{% endif %} class="form-checkbox text-pink-400 bg-pink-900 border-pink-400 focus:ring-pink-400">
+          <span>{{ music }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <button type="submit" class="w-full bg-pink-400 text-pink-900 font-semibold py-3 rounded hover:bg-pink-300 transition">Next</button>
+    </form>
+  </div>
+</body>
+</html>

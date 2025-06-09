@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Step 3 | Vibe Match</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gradient-to-br from-purple-700 to-indigo-900 min-h-screen flex items-center justify-center text-white p-6">
+
+  <div class="max-w-md w-full bg-white bg-opacity-10 rounded-xl p-8 shadow-lg">
+    <h1 class="text-3xl font-bold mb-4 text-yellow-300 text-center">Step 3: Write a Bio (Optional)</h1>
+    <p class="mb-6 text-center text-gray-200">
+      Tell us a little about yourself. This helps your matches get to know you better.
+      You can skip this if you want.
+    </p>
+
+    <form action="{{ url_for('onboarding_bio') }}" method="POST" class="space-y-6">
+      <div>
+        <label for="bio" class="block text-gray-200 font-semibold mb-2">Your Bio</label>
+        <textarea
+          id="bio"
+          name="bio"
+          rows="5"
+          placeholder="Write something about yourself..."
+          class="w-full rounded-md px-4 py-2 text-black focus:outline-none focus:ring-2 focus:ring-yellow-400"
+        >{{ bio or '' }}</textarea>
+      </div>
+
+      <div class="flex justify-between">
+        <a
+          href="{{ url_for('onboarding_age') }}"
+          class="text-yellow-300 hover:underline font-semibold"
+        >
+          ← Back
+        </a>
+        <button
+          type="submit"
+          class="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-3 px-6 rounded-full transition"
+        >
+          Next →
+        </button>
+      </div>
+    </form>
+  </div>
+
+</body>
+</html>

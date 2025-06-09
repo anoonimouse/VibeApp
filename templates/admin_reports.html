@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Admin Reports</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gradient-to-br from-purple-800 to-indigo-900 text-white min-h-screen py-8 px-4">
+  <div class="max-w-4xl mx-auto space-y-8">
+    <h2 class="text-4xl font-extrabold text-yellow-300 text-center">User Reports</h2>
+
+    {% if reports %}
+      <ul class="space-y-4">
+        {% for r in reports %}
+        <li class="bg-red-900 bg-opacity-30 p-4 rounded-lg border border-red-500">
+          <p><strong>Reporter:</strong> {{ r.reporter }}</p>
+          <p><strong>Reported:</strong> {{ r.reported }}</p>
+          <p><strong>Reason:</strong> {{ r.reason }}</p>
+          <div class="mt-2 space-x-3">
+            <form method="POST" action="/admin/reports/{{ r.id }}/dismiss" class="inline">
+              <button type="submit" class="px-4 py-2 bg-yellow-400 text-purple-900 font-semibold rounded hover:bg-yellow-300 transition">Dismiss</button>
+            </form>
+            <form method="POST" action="/admin/reports/{{ r.id }}/ban" class="inline">
+              <button type="submit" class="px-4 py-2 bg-red-600 text-white font-semibold rounded hover:bg-red-500 transition">Ban User</button>
+            </form>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-yellow-300 text-center">No reports found.</p>
+    {% endif %}
+  </div>
+</body>
+</html>

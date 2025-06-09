@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Your Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gradient-to-br from-purple-800 to-indigo-900 text-white min-h-screen py-10 px-4">
+  <div class="max-w-3xl mx-auto space-y-10">
+
+    <!-- Profile Card -->
+    <div class="bg-white bg-opacity-10 p-6 rounded-lg border border-yellow-300 shadow-lg">
+      <h2 class="text-2xl font-extrabold text-yellow-300 mb-4">Your Profile</h2>
+      <p><strong>Nickname:</strong> {{ user.nickname }}</p>
+      <p><strong>Age:</strong> {{ user.age }}</p>
+      <p><strong>Preferred age:</strong> {{ user.preferred_age_min }} – {{ user.preferred_age_max }}</p>
+      <p><strong>Bio:</strong> {{ user.bio }}</p>
+      <p><strong>Music:</strong> {{ user.interests_music or 'None' }}</p>
+      <p><strong>Movies:</strong> {{ user.interests_movies or 'None' }}</p>
+      <p><strong>Topics:</strong> {{ user.interests_topics or 'None' }}</p>
+      <a href="/edit-profile" class="mt-4 inline-block px-6 py-2 bg-yellow-400 text-purple-900 font-semibold rounded hover:bg-yellow-300 transition">Edit Profile</a>
+    </div>
+
+    <!-- Matches -->
+<div class="bg-white bg-opacity-10 p-6 rounded-lg border border-indigo-400 shadow-lg">
+  <h2 class="text-2xl font-extrabold text-indigo-300 mb-4">Your Matches</h2>
+  {% if matches %}
+  <ul class="space-y-4">
+    {% for m in matches %}
+    <li class="bg-indigo-900 bg-opacity-30 p-4 rounded-lg border border-indigo-500">
+      <div class="flex justify-between items-center flex-wrap">
+        <div>
+          <p class="font-semibold text-indigo-200 text-lg">{{ m.receiver }}</p>
+          <p class="text-indigo-300 text-sm">Matching Score: <strong>{{ score }}%</strong></p>
+        </div>
+        <div class="flex space-x-2 mt-2 sm:mt-0">
+          <a href="/message/{{ m.receiver }}" target="_blank"
+             class="px-3 py-1 bg-indigo-300 text-indigo-900 rounded hover:bg-indigo-200 font-semibold transition">
+            DM on Reddit
+          </a>
+          <a href="/share-profile/{{ m.receiver }}"
+             class="px-3 py-1 bg-green-300 text-green-900 rounded hover:bg-green-200 font-semibold transition">
+            View Profile
+          </a>
+          <form method="POST" action="/unmatch/{{ m.receiver }}">
+            <button type="submit"
+                    class="px-3 py-1 bg-red-300 text-red-900 rounded hover:bg-red-200 font-semibold transition">
+              Unmatch
+            </button>
+          </form>
+        </div>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-indigo-200">No matches yet. Go to <a href="/matches" class="underline text-indigo-100">Matches</a> to find new connections!</p>
+  {% endif %}
+</div>
+
+    <!-- Pending Vibes -->
+    <div class="bg-white bg-opacity-10 p-6 rounded-lg border border-pink-400 shadow-lg">
+      <h2 class="text-2xl font-extrabold text-pink-300 mb-4">Incoming Vibes</h2>
+      {% if pending_vibes %}
+      <ul class="space-y-4">
+        {% for v in pending_vibes %}
+        <li class="bg-pink-900 bg-opacity-30 p-4 rounded-lg border border-pink-500 flex justify-between items-center">
+          <span>{{ v.sender }}</span>
+          <div class="space-x-2">
+            <form method="POST" action="/accept-vibe/{{ v.sender }}" class="inline">
+              <button type="submit" class="px-4 py-2 bg-pink-400 text-pink-900 font-semibold rounded hover:bg-pink-300 transition">Accept</button>
+            </form>
+            <form method="POST" action="/deny-vibe/{{ v.sender }}" class="inline">
+              <button type="submit" class="px-4 py-2 bg-pink-600 text-white font-semibold rounded hover:bg-pink-500 transition">Deny</button>
+            </form>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="text-pink-200">You have no pending vibes.</p>
+      {% endif %}
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex justify-center gap-4">
+      <a href="/matches" class="px-6 py-3 bg-indigo-400 text-indigo-900 font-semibold rounded hover:bg-indigo-300 transition">Find Matches</a>
+    </div>
+
+  </div>
+</body>
+</html>

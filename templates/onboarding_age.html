@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Step 2 | Vibe Match</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gradient-to-br from-purple-700 to-indigo-900 min-h-screen flex items-center justify-center text-white p-6">
+
+  <div class="max-w-md w-full bg-white bg-opacity-10 rounded-xl p-8 shadow-lg">
+    <h1 class="text-3xl font-bold mb-4 text-yellow-300 text-center">Step 2: Age & Preferences</h1>
+    <p class="mb-6 text-center text-gray-200">
+      Tell us your age and the preferred age range of your vibe buddies.
+    </p>
+
+    <form action="{{ url_for('onboarding_age') }}" method="POST" class="space-y-6">
+      <div>
+        <label for="age" class="block text-gray-200 font-semibold mb-2">Your Age</label>
+        <input
+          type="number"
+          id="age"
+          name="age"
+          min="13"
+          max="120"
+          required
+          value="{{ age or '' }}"
+          placeholder="Enter your age"
+          class="w-full rounded-md px-4 py-2 text-black focus:outline-none focus:ring-2 focus:ring-yellow-400"
+        />
+      </div>
+
+      <div>
+        <label class="block text-gray-200 font-semibold mb-2">Preferred Age Range for Matches</label>
+        <div class="flex space-x-4">
+          <input
+            type="number"
+            name="preferred_age_min"
+            min="13"
+            max="120"
+            required
+            value="{{ preferred_age_min or '' }}"
+            placeholder="Min age"
+            class="w-1/2 rounded-md px-4 py-2 text-black focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          />
+          <input
+            type="number"
+            name="preferred_age_max"
+            min="13"
+            max="120"
+            required
+            value="{{ preferred_age_max or '' }}"
+            placeholder="Max age"
+            class="w-1/2 rounded-md px-4 py-2 text-black focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          />
+        </div>
+      </div>
+
+      {% if error %}
+        <p class="text-red-400 text-sm">{{ error }}</p>
+      {% endif %}
+
+      <button
+        type="submit"
+        class="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-3 rounded-full transition"
+      >
+        Next →
+      </button>
+    </form>
+  </div>
+
+</body>
+</html>

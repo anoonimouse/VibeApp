@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Profile of {{ user.nickname or user.reddit_username }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gradient-to-br from-purple-800 to-indigo-900 text-white min-h-screen flex items-center justify-center p-6">
+  <div class="w-full max-w-lg bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-xl border border-green-400 shadow-xl">
+    
+    <div class="text-center mb-6">
+      <h2 class="text-4xl font-bold text-green-300">
+        {{ user.nickname or user.reddit_username }}
+      </h2>
+      <p class="text-sm text-gray-200 mt-1">Profile Overview</p>
+    </div>
+
+    <div class="space-y-4 text-left text-white">
+      <div>
+        <span class="font-semibold text-green-200">Age:</span>
+        <span class="ml-2">{{ user.age }}</span>
+      </div>
+      
+      <div>
+        <span class="font-semibold text-green-200">Bio:</span>
+        <p class="ml-2 mt-1 text-gray-100 italic">{{ user.bio or 'No bio provided.' }}</p>
+      </div>
+      
+      <div>
+        <span class="font-semibold text-green-200">Music Interests:</span>
+        <p class="ml-2 mt-1 text-gray-100">{{ user.interests_music or 'None listed' }}</p>
+      </div>
+
+      <div>
+        <span class="font-semibold text-green-200">Movie Interests:</span>
+        <p class="ml-2 mt-1 text-gray-100">{{ user.interests_movies or 'None listed' }}</p>
+      </div>
+
+      <div>
+        <span class="font-semibold text-green-200">Topics of Interest:</span>
+        <p class="ml-2 mt-1 text-gray-100">{{ user.interests_topics or 'None listed' }}</p>
+      </div>
+    </div>
+
+    <div class="mt-8 text-center">
+      <a href="/dashboard" class="inline-block px-6 py-3 bg-yellow-400 text-purple-900 font-bold rounded-lg hover:bg-yellow-300 transition">
+        Return Home
+      </a>
+    </div>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Suggested Matches</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gradient-to-br from-purple-800 to-indigo-900 text-white min-h-screen py-8 px-4">
+  <div class="max-w-xl mx-auto space-y-8">
+    <h2 class="text-3xl font-extrabold text-indigo-300 text-center">Find Matches</h2>
+    {% if suggestions %}
+      <ul class="space-y-4">
+        {% for u, score in suggestions %}
+        <li class="bg-white bg-opacity-10 p-4 rounded-lg border border-indigo-500 flex justify-between items-center">
+          <div>
+            <p class="font-semibold text-indigo-200">{{ u.nickname or u.reddit_username }}</p>
+            <p class="text-indigo-300 text-sm">Match score: {{ score }}%</p>
+          </div>
+          <form method="POST" action="/send-vibe/{{ u.reddit_username }}">
+            <button type="submit" class="px-4 py-2 bg-indigo-400 text-indigo-900 rounded font-semibold hover:bg-indigo-300 transition">Send Vibe</button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-indigo-200 text-center">No matches found. Try updating your profile.</p>
+    {% endif %}
+    <div class="text-center">
+      <a href="/dashboard" class="px-6 py-3 bg-yellow-400 text-purple-900 font-semibold rounded hover:bg-yellow-300 transition">Back to Dashboard</a>
+    </div>
+  </div>
+</body>
+</html>

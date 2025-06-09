@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vibe Match</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-purple-800 to-indigo-900 text-white min-h-screen flex items-center justify-center">
+
+  <div class="text-center px-6 max-w-xl">
+    <h1 class="text-5xl font-extrabold leading-tight mb-4">
+      Welcome to <span class="text-yellow-300">Vibe Match</span>
+    </h1>
+    <p class="text-lg text-gray-200 mb-8">
+      Discover Reddit users who vibe with you. It's private, fast, and fun. Just answer a few questions and we’ll do the matching magic!
+    </p>
+
+    <a href="{{ url_for('login') }}" class="inline-flex items-center justify-center px-6 py-3 bg-yellow-400 text-black font-semibold text-lg rounded-full hover:bg-yellow-300 transition">
+      🔐 Sign in with Reddit
+    </a>
+
+    <p class="mt-6 text-sm text-gray-300">
+      No spam. No creepy tracking. Just vibes. 🔍
+    </p>
+
+    <div class="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-6 text-left text-gray-100">
+      <div class="bg-white bg-opacity-5 p-4 rounded-lg border border-purple-400">
+        <h2 class="font-semibold text-lg mb-2">👤 Personalized Onboarding</h2>
+        <p class="text-sm">We ask just enough to understand your interests and vibe, nothing more.</p>
+      </div>
+      <div class="bg-white bg-opacity-5 p-4 rounded-lg border border-indigo-400">
+        <h2 class="font-semibold text-lg mb-2">🤖 Smart Matching</h2>
+        <p class="text-sm">Get matched based on common interests, age preferences, and Reddit vibes.</p>
+      </div>
+      <div class="bg-white bg-opacity-5 p-4 rounded-lg border border-pink-400">
+        <h2 class="font-semibold text-lg mb-2">💌 Send Vibes</h2>
+        <p class="text-sm">Like someone’s vibe? Send a vibe and wait for them to vibe back!</p>
+      </div>
+      <div class="bg-white bg-opacity-5 p-4 rounded-lg border border-green-400">
+        <h2 class="font-semibold text-lg mb-2">📬 Connect via Reddit</h2>
+        <p class="text-sm">No new inboxes. We use Reddit DMs to let you connect comfortably.</p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

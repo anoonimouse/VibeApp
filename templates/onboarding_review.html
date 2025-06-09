@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Review Your Profile</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gradient-to-br from-purple-800 to-indigo-900 text-white min-h-screen flex items-center justify-center p-4">
+  <div class="max-w-lg w-full bg-white bg-opacity-10 p-8 rounded-lg border border-indigo-400 shadow-lg">
+    <h2 class="text-3xl font-extrabold text-indigo-300 text-center mb-6">Step 5: Review & Confirm</h2>
+    <ul class="space-y-4 text-gray-200">
+      <li><strong>Nickname:</strong> {{ user.nickname }}</li>
+      <li><strong>Age:</strong> {{ user.age }}</li>
+      <li><strong>Preferred age range:</strong> {{ user.preferred_age_min }} – {{ user.preferred_age_max }}</li>
+      <li><strong>Bio:</strong> {{ user.bio }}</li>
+      <li><strong>Music:</strong> {{ user.interests_music or 'None' }}</li>
+      <li><strong>Movies:</strong> {{ user.interests_movies or 'None' }}</li>
+      <li><strong>Topics:</strong> {{ user.interests_topics or 'None' }}</li>
+    </ul>
+    <a href="/dashboard" class="block mt-6 w-full bg-indigo-400 text-indigo-900 text-center font-semibold py-3 rounded hover:bg-indigo-300 transition">Finish & Go to Dashboard</a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Step 4c – Topic Interests</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gradient-to-br from-purple-800 to-indigo-900 text-white min-h-screen flex items-center justify-center p-4">
+  <div class="max-w-lg w-full bg-white bg-opacity-10 p-8 rounded-lg border border-yellow-400 shadow-lg">
+    <h2 class="text-3xl font-extrabold text-yellow-300 text-center mb-6">Step 4c: Topic Interests</h2>
+    <form method="POST" class="space-y-6">
+      <p class="text-yellow-300 mb-4">Pick your favorite topics:</p>
+      <div class="grid grid-cols-2 gap-4">
+        {% for topic in topic_options %}
+        <label class="inline-flex items-center space-x-2 text-yellow-300">
+          <input type="checkbox" name="topic_interests" value="{{ topic }}"
+                 {% if topic in saved_interests %}checked{% endif %}
+                 class="form-checkbox text-yellow-400 bg-yellow-900 border-yellow-400 focus:ring-yellow-400">
+          <span>{{ topic }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <button type="submit" class="w-full bg-yellow-400 text-purple-900 font-semibold py-3 rounded hover:bg-yellow-300 transition">Next</button>
+    </form>
+  </div>
+</body>
+</html>
