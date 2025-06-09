@@ -18,7 +18,7 @@ db.init_app(app)
 # Reddit OAuth config
 CLIENT_ID = os.environ.get('REDDIT_CLIENT_ID', 'ZohBbgx_RtMA4OLWTrKYTQ')
 CLIENT_SECRET = os.environ.get('REDDIT_CLIENT_SECRET', 'rUvR1cw5mh13MFo9iKu6_LdT6iKpgQ')
-REDIRECT_URI = os.environ.get('REDIRECT_URI', 'https://2bks01x5-5000.inc1.devtunnels.ms/callback')
+REDIRECT_URI = os.environ.get('REDIRECT_URI', 'https://vibeapp-xerv.onrender.com/callback')
 USER_AGENT = 'VibeMatchApp/0.1'
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'Ok_Investigator_6207')
 
