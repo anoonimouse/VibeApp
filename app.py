@@ -8,7 +8,7 @@ import time
 import os
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'your_secret_key_change_this_in_production')
+app.secret_key = os.environ.get('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -16,11 +16,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
 # Reddit OAuth config
-CLIENT_ID = os.environ.get('REDDIT_CLIENT_ID', 'ZohBbgx_RtMA4OLWTrKYTQ')
-CLIENT_SECRET = os.environ.get('REDDIT_CLIENT_SECRET', 'rUvR1cw5mh13MFo9iKu6_LdT6iKpgQ')
-REDIRECT_URI = os.environ.get('REDIRECT_URI', 'https://vibeapp-xerv.onrender.com/callback')
+CLIENT_ID = os.environ.get('REDDIT_CLIENT_ID')
+CLIENT_SECRET = os.environ.get('REDDIT_CLIENT_SECRET')
+REDIRECT_URI = os.environ.get('REDIRECT_URI')
 USER_AGENT = 'VibeMatchApp/0.1'
-ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'Ok_Investigator_6207')
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME')
 
 # ---------------------- Authentication Routes ----------------------
 
