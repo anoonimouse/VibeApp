@@ -62,7 +62,7 @@ db.init_app(app)
 # Reddit OAuth config
 CLIENT_ID = 'ZohBbgx_RtMA4OLWTrKYTQ'
 CLIENT_SECRET = 'rUvR1cw5mh13MFo9iKu6_LdT6iKpgQ'
-REDIRECT_URI = 'https://vibeapp-qhaq.onrender.com//callback'
+REDIRECT_URI = 'https://vibeapp-qhaq.onrender.com/callback'
 USER_AGENT = 'VibeMatchApp/0.1'
 
 @app.route('/')
