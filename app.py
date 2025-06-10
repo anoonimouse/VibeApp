@@ -7,6 +7,39 @@ import requests
 import time
 import os
 
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+
+db = SQLAlchemy()
+
+class User(db.Model):
+    __tablename__ = 'users'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    reddit_username = db.Column(db.String(50), unique=True, nullable=False)
+    nickname = db.Column(db.String(50))
+    age = db.Column(db.Integer)
+    bio = db.Column(db.Text)
+    preferred_age_min = db.Column(db.Integer)
+    preferred_age_max = db.Column(db.Integer)
+    interests_music = db.Column(db.Text)
+    interests_movies = db.Column(db.Text)
+    interests_topics = db.Column(db.Text)
+    account_age = db.Column(db.Integer)
+    karma = db.Column(db.Integer)
+    joined = db.Column(db.DateTime, default=datetime.utcnow)
+    is_banned = db.Column(db.Boolean, default=False)
+
+class Vibe(db.Model):
+    __tablename__ = 'vibes'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    sender = db.Column(db.String(50), nullable=False)
+    receiver = db.Column(db.String(50), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending, accepted, denied
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
@@ -15,6 +48,13 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Initialize database
 db.init_app(app)
 
+with app.app_context():
+    try:
+        db.create_all()
+        print("Database tables created/verified")
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+        
 # Reddit OAuth config
 CLIENT_ID = os.environ.get('REDDIT_CLIENT_ID')
 CLIENT_SECRET = os.environ.get('REDDIT_CLIENT_SECRET')
@@ -43,69 +83,141 @@ def login():
 
 @app.route('/callback')
 def callback():
+    print("=== CALLBACK ROUTE HIT ===")
     code = request.args.get('code')
-    if not code:
-        flash("Authorization failed. Please try again.")
+    error = request.args.get('error')
+    
+    if error:
+        print(f"OAuth error: {error}")
+        flash(f"Authorization failed: {error}")
         return redirect(url_for('landing'))
+    
+    if not code:
+        print("No authorization code received")
+        flash("Authorization failed. No code received.")
+        return redirect(url_for('landing'))
+    
+    print(f"Authorization code received: {code[:10]}...")
     
     auth = requests.auth.HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET)
     headers = {"User-Agent": USER_AGENT}
-    data = {'grant_type': 'authorization_code', 'code': code, 'redirect_uri': REDIRECT_URI}
+    data = {
+        'grant_type': 'authorization_code', 
+        'code': code, 
+        'redirect_uri': REDIRECT_URI
+    }
 
     try:
-        token_response = requests.post("https://www.reddit.com/api/v1/access_token",
-                                       auth=auth, data=data, headers=headers)
+        print("Requesting access token...")
+        token_response = requests.post(
+            "https://www.reddit.com/api/v1/access_token",
+            auth=auth, 
+            data=data, 
+            headers=headers,
+            timeout=10
+        )
+        
+        print(f"Token response status: {token_response.status_code}")
+        print(f"Token response: {token_response.text}")
+        
+        if token_response.status_code != 200:
+            print(f"Token request failed: {token_response.status_code}")
+            flash("Failed to get access token from Reddit.")
+            return redirect(url_for('landing'))
+        
         token_json = token_response.json()
         access_token = token_json.get('access_token')
 
         if not access_token:
-            flash("Error during Reddit OAuth. Please try again.")
+            print("No access token in response")
+            flash("Error during Reddit OAuth. No access token received.")
             return redirect(url_for('landing'))
 
+        print("Access token received, fetching user data...")
         headers['Authorization'] = f'bearer {access_token}'
-        user_response = requests.get("https://oauth.reddit.com/api/v1/me", headers=headers)
+        user_response = requests.get(
+            "https://oauth.reddit.com/api/v1/me", 
+            headers=headers,
+            timeout=10
+        )
+        
+        print(f"User response status: {user_response.status_code}")
+        
+        if user_response.status_code != 200:
+            print(f"User data request failed: {user_response.status_code}")
+            flash("Failed to get user data from Reddit.")
+            return redirect(url_for('landing'))
+        
         user_data = user_response.json()
+        print(f"User data: {user_data}")
 
-        username = user_data['name']
-        created_utc = user_data['created_utc']
+        username = user_data.get('name')
+        if not username:
+            print("No username in user data")
+            flash("Failed to get username from Reddit.")
+            return redirect(url_for('landing'))
+        
+        created_utc = user_data.get('created_utc', 0)
         account_age = int((time.time() - created_utc) // (60 * 60 * 24))
         total_karma = user_data.get('link_karma', 0) + user_data.get('comment_karma', 0)
 
+        print(f"Processing user: {username}")
+        
         # Check if user already exists in database
         user = User.query.filter_by(reddit_username=username).first()
+        print(f"Existing user found: {user is not None}")
 
         if user:
             if user.is_banned:
+                print(f"User {username} is banned")
                 flash("Your account has been banned.")
                 return redirect(url_for('landing'))
 
             # User exists: store session and go to dashboard
             session['user_id'] = user.id
             session['username'] = username
+            print(f"Existing user logged in: {username}, redirecting to dashboard")
             return redirect(url_for('dashboard'))
 
-        # New user: create user entry with partial data and go to onboarding
+        # New user: create user entry
+        print("Creating new user...")
         new_user = User(
             reddit_username=username,
             account_age=account_age,
             karma=total_karma,
             joined=datetime.utcnow()
         )
-        db.session.add(new_user)
-        db.session.commit()
-
-        print("OAuth success. Username:", username)
-        print("New user created:", new_user.id)
-        print("Session:", session)
-
+        
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+            print(f"New user created with ID: {new_user.id}")
+        except Exception as db_error:
+            print(f"Database error creating user: {db_error}")
+            db.session.rollback()
+            flash("Database error. Please try again.")
+            return redirect(url_for('landing'))
 
         session['user_id'] = new_user.id
         session['username'] = username
+        print(f"New user session created, redirecting to onboarding")
         return redirect(url_for('onboarding_nickname'))
 
+    except requests.exceptions.Timeout:
+        print("Request timeout")
+        flash("Request timeout. Please try again.")
+        return redirect(url_for('landing'))
+    except requests.exceptions.RequestException as e:
+        print(f"Request error: {e}")
+        flash("Network error during authentication.")
+        return redirect(url_for('landing'))
     except Exception as e:
+        print(f"Unexpected error in callback: {e}")
+        import traceback
+        traceback.print_exc()
         flash("Error during authentication. Please try again.")
         return redirect(url_for('landing'))
+
 
 @app.route('/logout')
 def logout():
@@ -622,9 +734,6 @@ def internal_error(error):
     return render_template('500.html'), 500
     
 
-# ---------------------- Debugging ----------------------
-    # Common issues and debugging steps for your Flask app
-
 ## Issue 1: Database Connection/Migration
 # The most likely cause is database issues. Add this to check:
 
@@ -654,193 +763,6 @@ def debug_route():
     except Exception as e:
         return f"Database error: {str(e)}"
 
-## Issue 2: Missing models.py
-# Make sure your models.py file exists and has these models:
-
-# models.py
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
-
-db = SQLAlchemy()
-
-class User(db.Model):
-    __tablename__ = 'users'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    reddit_username = db.Column(db.String(50), unique=True, nullable=False)
-    nickname = db.Column(db.String(50))
-    age = db.Column(db.Integer)
-    bio = db.Column(db.Text)
-    preferred_age_min = db.Column(db.Integer)
-    preferred_age_max = db.Column(db.Integer)
-    interests_music = db.Column(db.Text)
-    interests_movies = db.Column(db.Text)
-    interests_topics = db.Column(db.Text)
-    account_age = db.Column(db.Integer)
-    karma = db.Column(db.Integer)
-    joined = db.Column(db.DateTime, default=datetime.utcnow)
-    is_banned = db.Column(db.Boolean, default=False)
-
-class Vibe(db.Model):
-    __tablename__ = 'vibes'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    sender = db.Column(db.String(50), nullable=False)
-    receiver = db.Column(db.String(50), nullable=False)
-    status = db.Column(db.String(20), default='pending')  # pending, accepted, denied
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-## Issue 3: Enhanced callback route with better error handling
-
-@app.route('/callback')
-def callback():
-    print("=== CALLBACK ROUTE HIT ===")
-    code = request.args.get('code')
-    error = request.args.get('error')
-    
-    if error:
-        print(f"OAuth error: {error}")
-        flash(f"Authorization failed: {error}")
-        return redirect(url_for('landing'))
-    
-    if not code:
-        print("No authorization code received")
-        flash("Authorization failed. No code received.")
-        return redirect(url_for('landing'))
-    
-    print(f"Authorization code received: {code[:10]}...")
-    
-    auth = requests.auth.HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET)
-    headers = {"User-Agent": USER_AGENT}
-    data = {
-        'grant_type': 'authorization_code', 
-        'code': code, 
-        'redirect_uri': REDIRECT_URI
-    }
-
-    try:
-        print("Requesting access token...")
-        token_response = requests.post(
-            "https://www.reddit.com/api/v1/access_token",
-            auth=auth, 
-            data=data, 
-            headers=headers,
-            timeout=10
-        )
-        
-        print(f"Token response status: {token_response.status_code}")
-        print(f"Token response: {token_response.text}")
-        
-        if token_response.status_code != 200:
-            print(f"Token request failed: {token_response.status_code}")
-            flash("Failed to get access token from Reddit.")
-            return redirect(url_for('landing'))
-        
-        token_json = token_response.json()
-        access_token = token_json.get('access_token')
-
-        if not access_token:
-            print("No access token in response")
-            flash("Error during Reddit OAuth. No access token received.")
-            return redirect(url_for('landing'))
-
-        print("Access token received, fetching user data...")
-        headers['Authorization'] = f'bearer {access_token}'
-        user_response = requests.get(
-            "https://oauth.reddit.com/api/v1/me", 
-            headers=headers,
-            timeout=10
-        )
-        
-        print(f"User response status: {user_response.status_code}")
-        
-        if user_response.status_code != 200:
-            print(f"User data request failed: {user_response.status_code}")
-            flash("Failed to get user data from Reddit.")
-            return redirect(url_for('landing'))
-        
-        user_data = user_response.json()
-        print(f"User data: {user_data}")
-
-        username = user_data.get('name')
-        if not username:
-            print("No username in user data")
-            flash("Failed to get username from Reddit.")
-            return redirect(url_for('landing'))
-        
-        created_utc = user_data.get('created_utc', 0)
-        account_age = int((time.time() - created_utc) // (60 * 60 * 24))
-        total_karma = user_data.get('link_karma', 0) + user_data.get('comment_karma', 0)
-
-        print(f"Processing user: {username}")
-        
-        # Check if user already exists in database
-        user = User.query.filter_by(reddit_username=username).first()
-        print(f"Existing user found: {user is not None}")
-
-        if user:
-            if user.is_banned:
-                print(f"User {username} is banned")
-                flash("Your account has been banned.")
-                return redirect(url_for('landing'))
-
-            # User exists: store session and go to dashboard
-            session['user_id'] = user.id
-            session['username'] = username
-            print(f"Existing user logged in: {username}, redirecting to dashboard")
-            return redirect(url_for('dashboard'))
-
-        # New user: create user entry
-        print("Creating new user...")
-        new_user = User(
-            reddit_username=username,
-            account_age=account_age,
-            karma=total_karma,
-            joined=datetime.utcnow()
-        )
-        
-        try:
-            db.session.add(new_user)
-            db.session.commit()
-            print(f"New user created with ID: {new_user.id}")
-        except Exception as db_error:
-            print(f"Database error creating user: {db_error}")
-            db.session.rollback()
-            flash("Database error. Please try again.")
-            return redirect(url_for('landing'))
-
-        session['user_id'] = new_user.id
-        session['username'] = username
-        print(f"New user session created, redirecting to onboarding")
-        return redirect(url_for('onboarding_nickname'))
-
-    except requests.exceptions.Timeout:
-        print("Request timeout")
-        flash("Request timeout. Please try again.")
-        return redirect(url_for('landing'))
-    except requests.exceptions.RequestException as e:
-        print(f"Request error: {e}")
-        flash("Network error during authentication.")
-        return redirect(url_for('landing'))
-    except Exception as e:
-        print(f"Unexpected error in callback: {e}")
-        import traceback
-        traceback.print_exc()
-        flash("Error during authentication. Please try again.")
-        return redirect(url_for('landing'))
-
-## Issue 4: Check your environment variables on Render
-# Make sure these are set in your Render environment:
-# - SECRET_KEY
-# - DATABASE_URL  
-# - REDDIT_CLIENT_ID
-# - REDDIT_CLIENT_SECRET
-# - REDIRECT_URI (should be https://yourapp.onrender.com/callback)
-# - ADMIN_USERNAME
-
-## Issue 5: Database initialization
-# Add this route to manually create tables if needed:
-
 @app.route('/init-db')
 def init_db():
     """Initialize database tables - use once then remove"""
@@ -849,24 +771,6 @@ def init_db():
         return "Database tables created successfully!"
     except Exception as e:
         return f"Error creating tables: {e}"
-
-## Issue 6: Check your requirements.txt includes:
-"""
-Flask==2.3.3
-Flask-SQLAlchemy==3.0.5
-requests==2.31.0
-pytz==2023.3
-psycopg2-binary==2.9.7
-"""
-
-## Issue 7: Add this to your main app after db.init_app(app):
-with app.app_context():
-    try:
-        db.create_all()
-        print("Database tables created/verified")
-    except Exception as e:
-        print(f"Database initialization error: {e}")
-
 # ---------------------- Run Server ----------------------
 
 if __name__ == "__main__":
