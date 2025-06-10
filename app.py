@@ -94,6 +94,11 @@ def callback():
         db.session.add(new_user)
         db.session.commit()
 
+        print("OAuth success. Username:", username)
+        print("New user created:", new_user.id)
+        print("Session:", session)
+
+
         session['user_id'] = new_user.id
         session['username'] = username
         return redirect(url_for('onboarding_nickname'))
