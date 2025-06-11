@@ -73,19 +73,75 @@ def login():
     if 'user_id' in session:
         return redirect(url_for('dashboard'))  # Already logged in
 
-    # Start Reddit OAuth if not logged in
+    # Force web OAuth by using www.reddit.com instead of oauth redirect
+    # Add state parameter for security
+    import secrets
+    state = secrets.token_urlsafe(32)
+    session['oauth_state'] = state
+    
+    # Use compact=True to force mobile web view instead of app
     reddit_auth_url = (
         "https://www.reddit.com/api/v1/authorize?"
         f"client_id={CLIENT_ID}&response_type=code&state={state}&"
-        f"redirect_uri={REDIRECT_URI}&duration=temporary&scope=identity"
+        f"redirect_uri={REDIRECT_URI}&duration=permanent&scope=identity&"
+        "compact=true"
     )
     return redirect(reddit_auth_url)
+
+@app.route('/auth/reddit')
+def reddit_auth():
+    """Alternative endpoint that opens in a popup/new window to avoid app redirect"""
+    if 'user_id' in session:
+        return redirect(url_for('dashboard'))
+    
+    import secrets
+    state = secrets.token_urlsafe(32)
+    session['oauth_state'] = state
+    
+    # Force browser-based OAuth
+    reddit_auth_url = (
+        "https://www.reddit.com/api/v1/authorize?"
+        f"client_id={CLIENT_ID}&response_type=code&state={state}&"
+        f"redirect_uri={REDIRECT_URI}&duration=permanent&scope=identity"
+    )
+    
+    # Return JavaScript that opens OAuth in current window with forced browser mode
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Redirecting to Reddit...</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+            <h2>Connecting to Reddit...</h2>
+            <p>If you're not redirected automatically, <a href="{reddit_auth_url}" id="manual-link">click here</a>.</p>
+        </div>
+        <script>
+            // Force redirect in same window to avoid app interception
+            window.location.replace("{reddit_auth_url}");
+        </script>
+    </body>
+    </html>
+    '''
+
 
 @app.route('/callback')
 def callback():
     print("=== CALLBACK ROUTE HIT ===")
     code = request.args.get('code')
+    state = request.args.get('state')
     error = request.args.get('error')
+    
+    # Verify state parameter to prevent CSRF attacks
+    if state != session.get('oauth_state'):
+        print(f"State mismatch: expected {session.get('oauth_state')}, got {state}")
+        flash("Authentication failed: Invalid state parameter.")
+        return redirect(url_for('landing'))
+    
+    # Clear the state from session
+    session.pop('oauth_state', None)
     
     if error:
         print(f"OAuth error: {error}")
@@ -218,13 +274,69 @@ def callback():
         flash("Error during authentication. Please try again.")
         return redirect(url_for('landing'))
 
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash("Logged out successfully.")
-    return redirect(url_for('landing'))
-
+@app.route('/auth/mobile-help')
+def mobile_help():
+    """Help page for mobile users having OAuth issues"""
+    return '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Mobile Login Help</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                max-width: 600px; 
+                margin: 0 auto; 
+                padding: 20px; 
+                line-height: 1.6;
+            }
+            .help-section { 
+                background: #f5f5f5; 
+                padding: 15px; 
+                border-radius: 8px; 
+                margin: 10px 0; 
+            }
+            .button {
+                display: inline-block;
+                background: #ff4500;
+                color: white;
+                padding: 12px 24px;
+                text-decoration: none;
+                border-radius: 6px;
+                margin: 10px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Having trouble signing in?</h1>
+        
+        <div class="help-section">
+            <h3>For Mobile Users:</h3>
+            <p>If the Reddit app keeps opening instead of completing login:</p>
+            <ol>
+                <li>Use your mobile browser's "Desktop Mode" or "Request Desktop Site" option</li>
+                <li>Try using a different browser (Chrome, Firefox, Safari)</li>
+                <li>Clear your browser cookies and try again</li>
+            </ol>
+        </div>
+        
+        <div class="help-section">
+            <h3>Alternative Login Methods:</h3>
+            <p>If you continue having issues, you can:</p>
+            <ul>
+                <li>Try logging in from a desktop/laptop computer</li>
+                <li>Use an incognito/private browsing window</li>
+                <li>Contact support if the problem persists</li>
+            </ul>
+        </div>
+        
+        <a href="/login" class="button">Try Login Again</a>
+        <a href="/" class="button" style="background: #ccc; color: #333;">Back to Home</a>
+    </body>
+    </html>
+    '''
+    
 # ---------------------- 🧭 Onboarding Wizard ----------------------
 
 @app.route('/onboarding/nickname', methods=['GET', 'POST'])
