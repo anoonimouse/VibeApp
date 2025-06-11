@@ -77,7 +77,7 @@ def login():
     reddit_auth_url = (
         "https://www.reddit.com/api/v1/authorize.compact?"
         f"client_id={CLIENT_ID}&response_type=code&state=random_string&"
-        f"redirect_uri={REDIRECT_URI}&duration=temporary&scope=identity"
+        f"redirect_uri={REDIRECT_URI}&duration=permanent&scope=identity"
     )
     return redirect(reddit_auth_url)
 
