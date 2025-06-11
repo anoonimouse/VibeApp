@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, request, session, url_for, flash
+zfrom flask import Flask, redirect, render_template, request, session, url_for, flash
 from models import db, User, Vibe
 from datetime import datetime
 from pytz import timezone
@@ -77,7 +77,7 @@ def login():
     reddit_auth_url = (
         "https://www.reddit.com/api/v1/authorize.compact?"
         f"client_id={CLIENT_ID}&response_type=code&state=random_string&"
-        f"redirect_uri={REDIRECT_URI}&duration=permanent&scope=identity"
+        f"redirect_uri={REDIRECT_URI}&duration=temporary&scope=identity"
     )
     return redirect(reddit_auth_url)
 
