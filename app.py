@@ -337,6 +337,12 @@ def mobile_help():
     </body>
     </html>
     '''
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash("Logged out successfully.")
+    return redirect(url_for('landing'))
     
 # ---------------------- 🧭 Onboarding Wizard ----------------------
 
