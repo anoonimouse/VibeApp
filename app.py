@@ -295,8 +295,8 @@ def onboarding_bio():
             user.bio = bio
             db.session.commit()
             return redirect(url_for('onboarding_interests_music'))
-        else:
-            flash("Please enter a bio.")
+        # else:
+        #     flash("Please enter a bio.")
     
     return render_template('onboarding_bio.html', user=user)
 
