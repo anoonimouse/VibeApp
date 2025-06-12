@@ -290,15 +290,16 @@ def onboarding_bio():
         return redirect(url_for('landing'))
     
     if request.method == 'POST':
-        bio = request.form.get('bio', '').strip()
-        if bio:
-            user.bio = bio
-            db.session.commit()
-            return redirect(url_for('onboarding_interests_music'))
+    bio = request.form.get('bio', '').strip()
+    if bio:
+        user.bio = bio  # Save only if provided
+
+    db.session.commit()  # Always commits (even if no bio)
+    return redirect(url_for('onboarding_interests_music'))
         # else:
         #     flash("Please enter a bio.")
     
-    return render_template('onboarding_bio.html', user=user)
+    # return render_template('onboarding_bio.html', user=user)
 
 @app.route('/onboarding/interests/music', methods=['GET', 'POST'])
 def onboarding_interests_music():
