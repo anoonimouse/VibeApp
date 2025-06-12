@@ -294,12 +294,11 @@ def onboarding_bio():
         if bio:
             user.bio = bio  # Save only if provided
 
-        db.session.commit()  # Always commits (even if no bio)
+        db.session.commit()  # Commit even if bio is empty (for consistency)
         return redirect(url_for('onboarding_interests_music'))
-        # else:
-        #     flash("Please enter a bio.")
     
-    # return render_template('onboarding_bio.html', user=user)
+    return render_template('onboarding_bio.html', user=user)
+
 
 @app.route('/onboarding/interests/music', methods=['GET', 'POST'])
 def onboarding_interests_music():
