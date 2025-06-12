@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Step 2 | Vibe Match</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-</head>
+</head>  
+<body class="bg-gradient-to-br from-purple-700 to-indigo-900 min-h-screen flex items-center justify-center text-white p-6">
   <!-- Flash messages -->
   <ul class="mt-4">
     {% for message in get_flashed_messages() %}
@@ -14,8 +15,6 @@
       </li>
     {% endfor %}
   </ul>
-  
-<body class="bg-gradient-to-br from-purple-700 to-indigo-900 min-h-screen flex items-center justify-center text-white p-6">
   <div class="max-w-md w-full bg-white bg-opacity-10 rounded-xl p-8 shadow-lg">
     <h1 class="text-3xl font-bold mb-4 text-yellow-300 text-center">Step 2: Age & Preferences</h1>
     <p class="mb-6 text-center text-gray-200">
