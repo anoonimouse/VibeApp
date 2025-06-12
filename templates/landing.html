@@ -9,6 +9,14 @@
 <body class="bg-gradient-to-br from-purple-800 to-indigo-900 text-white min-h-screen flex items-center justify-center">
 
   <div class="text-center px-6 max-w-xl">
+     <!-- Flash messages -->
+  <ul class="mt-4">
+    {% for message in get_flashed_messages() %}
+      <li class="bg-green-100 text-green-800 px-4 py-2 rounded shadow-md">
+        {{ message }}
+      </li>
+    {% endfor %}
+  </ul>
     <h1 class="text-5xl font-extrabold leading-tight mb-4">
       Welcome to <span class="text-yellow-300">Vibe Match</span>
     </h1>
