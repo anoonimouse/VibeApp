@@ -7,6 +7,14 @@
 </head>
 <body class="bg-gradient-to-br from-purple-800 to-indigo-900 text-white min-h-screen py-10 px-4">
   <div class="max-w-3xl mx-auto space-y-10">
+      <!-- Flash messages -->
+  <ul class="mt-4">
+    {% for message in get_flashed_messages() %}
+      <li class="bg-green-100 text-green-800 px-4 py-2 rounded shadow-md">
+        {{ message }}
+      </li>
+    {% endfor %}
+  </ul>
 
     <!-- Profile Card -->
     <div class="bg-white bg-opacity-10 p-6 rounded-lg border border-yellow-300 shadow-lg">
