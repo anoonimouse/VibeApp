@@ -8,7 +8,14 @@
 </head>
 <body class="bg-gradient-to-br from-purple-800 to-indigo-900 text-white min-h-screen flex items-center justify-center p-6">
   <div class="w-full max-w-lg bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-xl border border-green-400 shadow-xl">
-    
+      <!-- Flash messages -->
+  <ul class="mt-4">
+    {% for message in get_flashed_messages() %}
+      <li class="bg-green-100 text-green-800 px-4 py-2 rounded shadow-md">
+        {{ message }}
+      </li>
+    {% endfor %}
+  </ul>
     <div class="text-center mb-6">
       <h2 class="text-4xl font-bold text-green-300">
         {{ user.nickname or user.reddit_username }}
