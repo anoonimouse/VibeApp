@@ -290,12 +290,12 @@ def onboarding_bio():
         return redirect(url_for('landing'))
     
     if request.method == 'POST':
-    bio = request.form.get('bio', '').strip()
-    if bio:
-        user.bio = bio  # Save only if provided
+        bio = request.form.get('bio', '').strip()
+        if bio:
+            user.bio = bio  # Save only if provided
 
-    db.session.commit()  # Always commits (even if no bio)
-    return redirect(url_for('onboarding_interests_music'))
+        db.session.commit()  # Always commits (even if no bio)
+        return redirect(url_for('onboarding_interests_music'))
         # else:
         #     flash("Please enter a bio.")
     
