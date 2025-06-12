@@ -8,6 +8,14 @@
 </head>
 <body class="bg-gradient-to-br from-purple-800 to-indigo-900 text-white min-h-screen flex items-center justify-center p-4">
   <div class="max-w-lg w-full bg-white bg-opacity-10 p-8 rounded-lg border border-green-400 shadow-lg">
+      <!-- Flash messages -->
+  <ul class="mt-4">
+    {% for message in get_flashed_messages() %}
+      <li class="bg-green-100 text-green-800 px-4 py-2 rounded shadow-md">
+        {{ message }}
+      </li>
+    {% endfor %}
+  </ul>
     <h2 class="text-3xl font-extrabold text-green-300 text-center mb-6">Edit Your Profile</h2>
     <form method="POST" class="space-y-6">
       
