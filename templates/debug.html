@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Debug Info</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 text-gray-800 p-8">
+    <div class="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-6">
+        <h1 class="text-2xl font-bold mb-4">🔍 Debug Information</h1>
+
+        {% if debug.db_connected %}
+            <p class="text-green-600 font-semibold">✅ Database connected</p>
+            <ul class="list-disc list-inside mt-2">
+                <li>Total users: {{ debug.user_count }}</li>
+                <li>Total vibes: {{ debug.vibe_count }}</li>
+            </ul>
+        {% else %}
+            <p class="text-red-600 font-semibold">❌ Database connection failed</p>
+            <p class="text-red-500 mt-2"><strong>Error:</strong> {{ debug.error }}</p>
+        {% endif %}
+
+        <hr class="my-6">
+
+        <h2 class="text-xl font-semibold mb-2">🧠 Session Data</h2>
+        <pre class="bg-gray-100 p-4 rounded overflow-x-auto">{{ debug.session | tojson(indent=2) }}</pre>
+
+        <hr class="my-6">
+
+        <h2 class="text-xl font-semibold mb-2">🌍 Environment Variables</h2>
+        <ul class="list-disc list-inside space-y-1">
+            <li>DATABASE_URL: {{ "✅" if debug.env.DATABASE_URL else "❌" }}</li>
+            <li>SECRET_KEY: {{ "✅" if debug.env.SECRET_KEY else "❌" }}</li>
+            <li>REDDIT_CLIENT_ID: {{ "✅" if debug.env.REDDIT_CLIENT_ID else "❌" }}</li>
+            <li>REDDIT_CLIENT_SECRET: {{ "✅" if debug.env.REDDIT_CLIENT_SECRET else "❌" }}</li>
+            <li>REDIRECT_URI: <span class="font-mono">{{ debug.env.REDIRECT_URI }}</span></li>
+        </ul>
+
+        <hr class="my-6">
+
+        <a href="{{ url_for('landing') }}" class="text-blue-600 hover:underline mt-4 inline-block">← Back to Home</a>
+    </div>
+</body>
+</html>
