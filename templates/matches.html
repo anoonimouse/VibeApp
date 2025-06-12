@@ -7,6 +7,15 @@
 </head>
 <body class="bg-gradient-to-br from-purple-800 to-indigo-900 text-white min-h-screen py-8 px-4">
   <div class="max-w-xl mx-auto space-y-8">
+      <!-- Flash messages -->
+  <ul class="mt-4">
+    {% for message in get_flashed_messages() %}
+      <li class="bg-green-100 text-green-800 px-4 py-2 rounded shadow-md">
+        {{ message }}
+      </li>
+    {% endfor %}
+  </ul>
+    
     <h2 class="text-3xl font-extrabold text-indigo-300 text-center">Find Matches</h2>
     {% if suggestions %}
       <ul class="space-y-4">
