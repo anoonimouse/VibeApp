@@ -739,29 +739,42 @@ def internal_error(error):
 
 @app.route('/debug')
 def debug_route():
-    """Temporary debug route to check database connectivity"""
+    """Detailed debug route using a separate HTML template"""
     try:
-        # Test database connection
+        # Collect debug data
         user_count = User.query.count()
         vibe_count = Vibe.query.count()
-        
-        return f"""
-        <h2>Debug Info:</h2>
-        <p>Database connected: ✅</p>
-        <p>Total users: {user_count}</p>
-        <p>Total vibes: {vibe_count}</p>
-        <p>Session data: {dict(session)}</p>
-        <p>Environment variables:</p>
-        <ul>
-            <li>DATABASE_URL: {'✅' if os.getenv('DATABASE_URL') else '❌'}</li>
-            <li>SECRET_KEY: {'✅' if os.getenv('SECRET_KEY') else '❌'}</li>
-            <li>REDDIT_CLIENT_ID: {'✅' if os.getenv('REDDIT_CLIENT_ID') else '❌'}</li>
-            <li>REDDIT_CLIENT_SECRET: {'✅' if os.getenv('REDDIT_CLIENT_SECRET') else '❌'}</li>
-            <li>REDIRECT_URI: {os.getenv('REDIRECT_URI', 'Not set')}</li>
-        </ul>
-        """
+
+        debug_info = {
+            "db_connected": True,
+            "user_count": user_count,
+            "vibe_count": vibe_count,
+            "session": dict(session),
+            "env": {
+                "DATABASE_URL": bool(os.getenv("DATABASE_URL")),
+                "SECRET_KEY": bool(os.getenv("SECRET_KEY")),
+                "REDDIT_CLIENT_ID": bool(os.getenv("REDDIT_CLIENT_ID")),
+                "REDDIT_CLIENT_SECRET": bool(os.getenv("REDDIT_CLIENT_SECRET")),
+                "REDIRECT_URI": os.getenv("REDIRECT_URI", "Not set")
+            }
+        }
+
     except Exception as e:
-        return f"Database error: {str(e)}"
+        debug_info = {
+            "db_connected": False,
+            "error": str(e),
+            "session": dict(session),
+            "env": {
+                "DATABASE_URL": bool(os.getenv("DATABASE_URL")),
+                "SECRET_KEY": bool(os.getenv("SECRET_KEY")),
+                "REDDIT_CLIENT_ID": bool(os.getenv("REDDIT_CLIENT_ID")),
+                "REDDIT_CLIENT_SECRET": bool(os.getenv("REDDIT_CLIENT_SECRET")),
+                "REDIRECT_URI": os.getenv("REDIRECT_URI", "Not set")
+            }
+        }
+
+    return render_template("debug.html", debug=debug_info)
+
 
 @app.route('/init-db')
 def init_db():
