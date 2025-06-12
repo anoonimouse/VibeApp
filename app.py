@@ -262,8 +262,8 @@ def onboarding_age():
             preferred_age_min = int(request.form['preferred_age_min'])
             preferred_age_max = int(request.form['preferred_age_max'])
             
-            if age < 18 or age > 100:
-                flash("Age must be between 18 and 100.")
+            if age < 13 or age > 100:
+                flash("Age must be between 13 and 100.")
                 return render_template('onboarding_age.html', user=user)
             
             if preferred_age_min > preferred_age_max:
