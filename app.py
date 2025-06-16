@@ -439,7 +439,8 @@ def dashboard():
 
     # Fetch accepted matches
     matches = db.session.query(Vibe).filter_by(sender=user.reddit_username, status='accepted').all()
-
+    
+    score = calculate_match_score(user, u)
     # Fetch pending incoming vibes
     incoming_vibes = db.session.query(Vibe).filter_by(receiver=user.reddit_username, status='pending').all()
 
